@@ -4,7 +4,6 @@ import RealityKitContent
 import ARKit
 
 struct ImmersiveView: View {
-    
     let session = ARKitSession()
     let planeData = PlaneDetectionProvider(alignments: [.horizontal, .vertical])
     
@@ -18,33 +17,35 @@ struct ImmersiveView: View {
                 content.add(scene)
                 
                 Task {
-                    try await session.run([planeData])
-                    
-                    for await update in planeData.anchorUpdates {
-                        if update.anchor.classification == .window {
-                            continue
-                        }
-                        switch update.event {
-                        case .added, .updated:
-                            await updatePlane(update.anchor)
-                        case .removed:
-                            await removePlane(update.anchor)
-                        }
-                        
-                    }
+                    await startSession()
                 }
             }
         }
-        
-        
-
-        
+    }
+    
+    private func startSession() async {
+        do {
+            try await session.run([planeData])
+            
+            for await update in planeData.anchorUpdates {
+                if update.anchor.classification == .window {
+                    continue
+                }
+                switch update.event {
+                case .added, .updated:
+                    await updatePlane(update.anchor)
+                case .removed:
+                    await removePlane(update.anchor)
+                }
+            }
+        } catch {
+            print("ARKit session error: \(error)")
+        }
     }
     
     @MainActor
-    func updatePlane(_ anchor: PlaneAnchor) async {
+    private func updatePlane(_ anchor: PlaneAnchor) async {
         if planeAnchors[anchor.id] == nil {
-            // Add a new entity to represent this plane.
             let entity = ModelEntity(mesh: .generateText(anchor.classification.description))
             entityMap[anchor.id] = entity
             rootEntity.addChild(entity)
@@ -55,7 +56,7 @@ struct ImmersiveView: View {
     }
     
     @MainActor
-    func removePlane(_ anchor: PlaneAnchor) async {
+    private func removePlane(_ anchor: PlaneAnchor) async {
         entityMap[anchor.id]?.removeFromParent()
         entityMap.removeValue(forKey: anchor.id)
         planeAnchors.removeValue(forKey: anchor.id)
@@ -66,6 +67,3 @@ struct ImmersiveView: View {
     ImmersiveView()
         .previewLayout(.sizeThatFits)
 }
-
-
-
