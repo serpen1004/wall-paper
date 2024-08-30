@@ -15,7 +15,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Button("Start ARKit experience RUDRA") {
+            Button("Start ARKit experience bro") {
                 Task {
                     print("Starting ARKit session...")
                     await activateARKitSession()
@@ -165,6 +165,41 @@ struct ContentView: View {
     }
 }
 
+import ARKit
+
+// Add a button to change AR session configuration
+var body: some View {
+    VStack {
+        Button("Start ARKit experience Bro") {
+            Task {
+                print("Starting ARKit session...")
+                await activateARKitSession()
+            }
+        }
+        .padding()
+        
+        Button("Place Custom 3D Model") {
+            placeCustomModel()
+        }
+        .padding()
+        
+        Button("Change AR Session Configuration") {
+            changeARConfiguration()
+        }
+        .padding()
+    }
+}
+
+// Function to change AR session configuration dynamically
+private func changeARConfiguration() {
+    let newConfiguration = ARWorldTrackingConfiguration()
+    newConfiguration.planeDetection = [.horizontal]
+    session.run(newConfiguration, options: [.resetTracking, .removeExistingAnchors])
+    print("AR session configuration changed.")
+}
+
+
 #Preview(windowStyle: .automatic) {
     ContentView()
 }
+
