@@ -12,14 +12,38 @@ struct ImmersiveView: View {
     @State private var entityMap: [UUID: Entity] = [:]
     
     var body: some View {
-        RealityView { content in
-            if let scene = try? await Entity(named: "Immersive", in: realityKitContentBundle) {
-                content.add(scene)
-                
-                Task {
-                    await startSession()
+        VStack {
+            RealityView { content in
+                if let scene = try? await Entity(named: "Immersive", in: realityKitContentBundle) {
+                    content.add(scene)
+                    
+                    Task {
+                        await startSession()
+                    }
                 }
             }
+            
+            HStack {
+                Button("Place Model") {
+                    placeCustomModel()
+                }
+                .padding()
+                
+                Button("Change Configuration") {
+                    changeARConfiguration()
+                }
+                .padding()
+                
+                Button("Capture Screenshot") {
+                    captureScreenshot()
+                }
+                .padding()
+            }
+            
+            Button("Reset AR Session") {
+                resetARSession()
+            }
+            .padding()
         }
     }
     
@@ -41,6 +65,36 @@ struct ImmersiveView: View {
         } catch {
             print("ARKit session error: \(error)")
         }
+    }
+    
+    
+    private func placeCustomModel() {
+        let customEntity = try! ModelEntity.load(named: "custom_model")
+        customEntity.position = [0, 0, -1]
+        rootEntity.addChild(customEntity)
+    }
+    
+    private func changeARConfiguration() {
+        let newConfiguration = ARWorldTrackingConfiguration()
+        newConfiguration.planeDetection = [.horizontal]
+        session.run(newConfiguration, options: [.resetTracking, .removeExistingAnchors])
+        print("AR session configuration changed.")
+    }
+    
+    private func captureScreenshot() {
+        let arView = ARView(frame: UIScreen.main.bounds)
+        let image = arView.snapshot()
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        print("Screenshot captured.")
+    }
+    
+    private func resetARSession() {
+        session.pause()
+        rootEntity.children.removeAll()
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = [.horizontal, .vertical]
+        session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        print("AR session reset.")
     }
     
     @MainActor
