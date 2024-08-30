@@ -129,30 +129,86 @@ struct ContentView: View {
         session.configuration?.immersion = immersionState
     }
     
-    private func captureScreenshot() {
-        guard let currentFrame = session.currentFrame else {
-            print("Failed to capture screenshot: no current frame.")
-            return
+  import ARKit
+
+// Add a button to capture a screenshot
+var body: some View {
+    VStack {
+        Button("Start ARKit experience RUDRA") {
+            Task {
+                print("Starting ARKit session...")
+                await activateARKitSession()
+            }
         }
-        let ciImage = CIImage(cvPixelBuffer: currentFrame.capturedImage)
-        let context = CIContext()
-        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
-            let uiImage = UIImage(cgImage: cgImage)
-            UIImageWriteToSavedPhotosAlbum(uiImage, nil, nil, nil)
-            print("Screenshot captured and saved to Photos.")
+        .padding()
+        
+        Button("Place Custom 3D Model") {
+            placeCustomModel()
         }
+        .padding()
+        
+        Button("Change AR Session Configuration") {
+            changeARConfiguration()
+        }
+        .padding()
+        
+        Button("Capture Screenshot") {
+            captureScreenshot()
+        }
+        .padding()
     }
-    
-    private func resetARSession() {
-        session.pause()
-        session = ARKitSession()
-        rootEntity.children.removeAll()
-        planeAnchors.removeAll()
-        entityMap.removeAll()
-        isSessionRunning = false
-        print("AR session reset.")
+}
+
+// Function to capture a screenshot of the AR session
+private func captureScreenshot() {
+    let arView = ARView(frame: UIScreen.main.bounds)
+    let image = arView.snapshot()
+    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+    print("Screenshot captured.")
+}
+
+    var body: some View {
+    VStack {
+        Button("Start ARKit experience RUDRA") {
+            Task {
+                print("Starting ARKit session...")
+                await activateARKitSession()
+            }
+        }
+        .padding()
+        
+        Button("Place Custom 3D Model") {
+            placeCustomModel()
+        }
+        .padding()
+        
+        Button("Change AR Session Configuration") {
+            changeARConfiguration()
+        }
+        .padding()
+        
+        Button("Capture Screenshot") {
+            captureScreenshot()
+        }
+        .padding()
+        
+        Button("Reset AR Session") {
+            resetARSession()
+        }
+        .padding()
     }
-    
+}
+
+// Function to reset the AR session
+private func resetARSession() {
+    session.pause()
+    rootEntity.children.removeAll()
+    let configuration = ARWorldTrackingConfiguration()
+    configuration.planeDetection = [.horizontal, .vertical]
+    session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+    print("AR session reset.")
+}
+
     private func addGesturesToModel() {
         guard let modelEntity = currentModelEntity else { return }
         let rotationGesture = EntityGestureRecognizer(type: .rotation, target: modelEntity)
