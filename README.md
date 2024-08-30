@@ -1,2 +1,2 @@
 # wall-paper
-making an app, will complete soon
+making this app to apply textures and wallpaper to walls
